@@ -1,23 +1,26 @@
 import { ClientOptions } from 'contentful-management';
-import { env } from '../config/env.js';
 import { getVersion } from '../utils/getVersion.js';
+import { getCurrentContext } from '../core/context.js';
+import type { McpServerContext } from '../types.js';
 
 /**
  * Creates a default Contentful client configuration without actually initializing it.
  */
-export function getDefaultClientConfig(): ClientOptions {
-  if (!env.success && process.env.TEST_TYPE !== 'unit') {
-    throw new Error('Environment variables are not properly configured');
+export function getDefaultClientConfig(
+  contextOverride?: McpServerContext,
+): ClientOptions {
+  const context = contextOverride ?? getCurrentContext();
+
+  if (!context) {
+    throw new Error('Contentful MCP server context is not available');
   }
 
-  const clientConfig: ClientOptions = {
-    accessToken: env.data!.CONTENTFUL_MANAGEMENT_ACCESS_TOKEN,
-    host: env.data!.CONTENTFUL_HOST,
-    space: env.data!.SPACE_ID,
+  return {
+    accessToken: context.accessToken,
+    host: context.host,
+    space: context.spaceId,
     headers: {
-      'X-Contentful-User-Agent-Tool': `contentful-mcp/${getVersion()}`, //Include user agent header for telemetry tracking
+      'X-Contentful-User-Agent-Tool': `contentful-mcp/${getVersion()}`,
     },
-  };
-
-  return clientConfig;
+  } satisfies ClientOptions;
 }

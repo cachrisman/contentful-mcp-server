@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { registerAllPrompts } from './prompts/register.js';
-import { registerAllResources } from './resources/register.js';
-import { registerAllTools } from './tools/register.js';
+import { createMcpServer } from './library.js';
+import { env } from './config/env.js';
 import { VERSION } from './config/version.js';
 
 if (process.env.NODE_ENV === 'development') {
@@ -16,24 +14,37 @@ if (process.env.NODE_ENV === 'development') {
 
 const MCP_SERVER_NAME = '@contentful/mcp-server';
 
-async function initializeServer() {
-  const server = new McpServer({
-    name: MCP_SERVER_NAME,
-    version: VERSION,
-  });
+function ensureEnv() {
+  if (!env.success) {
+    throw new Error(
+      'Environment variables are not properly configured for CLI mode',
+    );
+  }
 
-  registerAllTools(server);
-  registerAllPrompts(server);
-  registerAllResources(server);
+  const data = env.data!;
 
-  return server;
+  if (!data.CONTENTFUL_MANAGEMENT_ACCESS_TOKEN || !data.SPACE_ID) {
+    throw new Error(
+      'CONTENTFUL_MANAGEMENT_ACCESS_TOKEN and SPACE_ID must be provided',
+    );
+  }
+
+  return {
+    token: data.CONTENTFUL_MANAGEMENT_ACCESS_TOKEN,
+    spaceId: data.SPACE_ID,
+    environmentId: data.ENVIRONMENT_ID ?? 'master',
+    host: data.CONTENTFUL_HOST,
+  } as const;
 }
 
 async function main() {
   try {
-    const server = await initializeServer();
+    const options = ensureEnv();
+    const server = createMcpServer(options);
     const transport = new StdioServerTransport();
+
     await server.connect(transport);
+    console.log(`${MCP_SERVER_NAME} v${VERSION} is running over stdio.`);
   } catch (error) {
     console.error('Fatal error:', error);
     process.exit(1);

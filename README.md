@@ -19,6 +19,9 @@ This MCP server provides a comprehensive set of tools for content management, al
   - [Installation](#installation)
   - [Environment Variables](#environment-variables)
   - [Configuration](#configuration)
+- [🧩 Programmatic Usage](#-programmatic-usage)
+  - [Node.js WebSocket or Serverless](#nodejs-websocket-or-serverless)
+  - [Local stdio Development](#local-stdio-development)
 - [🛠️ Available Tools](#️-available-tools)
 - [🔍 Development](#-development)
   - [Testing with MCP Inspector](#testing-with-mcp-inspector)
@@ -93,6 +96,60 @@ Below is a sample configuration:
   }
 }
 ```
+
+## 🧩 Programmatic Usage
+
+`@contentful/mcp-server` can also be embedded as a TypeScript library. Each call to `createMcpServer` produces an isolated, multi-tenant instance that accepts Contentful credentials at runtime—perfect for serverless or multi-user gateways.
+
+### Node.js WebSocket or Serverless
+
+```ts
+import { createMcpServer } from '@contentful/mcp-server';
+import { nodeWebSocketAdapter } from '@contentful/mcp-server/adapters';
+
+wss.on('connection', async (socket, request) => {
+  const server = createMcpServer({
+    token: lookupTenantToken(request),
+    spaceId: lookupSpaceId(request),
+    environmentId: lookupEnvironment(request),
+  });
+
+  const detach = await nodeWebSocketAdapter(server, socket, {
+    onError: (error) => console.error('socket error', error),
+  });
+
+  socket.once('close', async () => {
+    await server.stop();
+  });
+
+  server.onStop(detach);
+});
+```
+
+Use this pattern inside a Vercel Function (or any Node serverless runtime) to spin up a brand-new MCP instance for each WebSocket session. See [`examples/vercel-websocket.ts`](./examples/vercel-websocket.ts) for a complete script.
+
+### Local stdio Development
+
+```ts
+import { createMcpServer } from '@contentful/mcp-server';
+import { nodeStreamsAdapter } from '@contentful/mcp-server/adapters';
+
+async function main() {
+  const server = createMcpServer({
+    token: process.env.CONTENTFUL_MANAGEMENT_ACCESS_TOKEN!,
+    spaceId: process.env.SPACE_ID!,
+    environmentId: process.env.ENVIRONMENT_ID ?? 'master',
+  });
+
+  await nodeStreamsAdapter(server, {
+    stdin: process.stdin,
+    stdout: process.stdout,
+    stderr: process.stderr,
+  });
+}
+```
+
+The default logger automatically redacts sensitive values such as the CMA token. See [`examples/stdio.ts`](./examples/stdio.ts) for an end-to-end runnable sample.
 
 ## 🛠️ Available Tools
 

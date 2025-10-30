@@ -7,9 +7,35 @@
   },
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "bin": {
-    "contentful-mcp-server": "./build/index.js"
+    "contentful-mcp-server": "./build/cjs/index.js"
   },
+  "exports": {
+    ".": {
+      "types": "./build/esm/library.d.ts",
+      "import": "./build/esm/library.js",
+      "require": "./build/cjs/library.js"
+    },
+    "./adapters": {
+      "types": "./build/esm/adapters/index.d.ts",
+      "import": "./build/esm/adapters/index.js",
+      "require": "./build/cjs/adapters/index.js"
+    },
+    "./adapters/nodeWebSocket": {
+      "types": "./build/esm/adapters/nodeWebSocket.d.ts",
+      "import": "./build/esm/adapters/nodeWebSocket.js",
+      "require": "./build/cjs/adapters/nodeWebSocket.js"
+    },
+    "./adapters/nodeStreams": {
+      "types": "./build/esm/adapters/nodeStreams.d.ts",
+      "import": "./build/esm/adapters/nodeStreams.js",
+      "require": "./build/cjs/adapters/nodeStreams.js"
+    }
+  },
+  "main": "./build/cjs/library.js",
+  "module": "./build/esm/library.js",
+  "types": "./build/esm/library.d.ts",
   "files": [
     "build"
   ],
@@ -19,12 +45,14 @@
   },
   "scripts": {
     "clean": "rimraf build",
-    "build": "npm run clean && tsc",
+    "build:esm": "tsc --project tsconfig.json",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
     "dev": "npm run clean && tsc --watch",
     "format": "prettier --write .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "start": "node build/index.js",
+    "start": "node build/cjs/index.js",
     "test": "vitest",
     "test:run": "vitest run",
     "inspect": "node -r dotenv/config ./scripts/inspect.js",
@@ -34,37 +62,38 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.0",
-    "contentful-export": "^7.21.78",
-    "contentful-management": "^11.54.3",
-    "contentful-import": "^9.4.111",
-    "dotenv": "^16.4.7",
-    "fast-xml-parser": "^5.2.5",
+    "@contentful/rich-text-types": "^17.2.4",
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "contentful-export": "^7.21.96",
+    "contentful-import": "^9.4.124",
+    "contentful-management": "^11.61.1",
+    "dotenv": "^17.2.3",
+    "fast-xml-parser": "^5.3.0",
     "get-it": "^8.6.10",
-    "gpt-tokenizer": "^2.9.0",
+    "gpt-tokenizer": "^3.2.0",
     "outdent": "^0.8.0",
-    "zod": "^3.25.76"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@anthropic-ai/dxt": "^0.2.6",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@modelcontextprotocol/inspector": "0.16.2",
-    "@nx/js": "^21.3.6",
-    "@types/node": "^22.16.5",
-    "@typescript-eslint/eslint-plugin": "^8.42.0",
-    "eslint": "^9.35.0",
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@modelcontextprotocol/inspector": "0.17.2",
+    "@nx/js": "^22.0.2",
+    "@types/node": "^24.9.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "eslint": "^9.38.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-unused-imports": "^4.1.4",
+    "eslint-plugin-unused-imports": "^4.3.0",
     "husky": "^9.1.7",
     "mcps-logger": "^1.0.0",
     "nodemon": "^3.1.10",
-    "nx": "^21.3.5",
+    "nx": "^22.0.2",
     "prettier": "^3.6.2",
     "pretty-quick": "^4.2.2",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.5"
   }
 }

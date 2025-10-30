@@ -3,7 +3,7 @@ import { outdent } from 'outdent';
 import { contextStore } from './store.js';
 import { withErrorHandling } from '../../utils/response.js';
 import { MCP_INSTRUCTIONS } from './instructions.js';
-import { env } from '../../config/env.js';
+import { getCurrentContext } from '../../core/context.js';
 
 export const GetInitialContextToolParams = z.object({});
 
@@ -14,16 +14,18 @@ export function hasInitialContext(): boolean {
 }
 
 async function tool(_params: Params) {
+  const context = getCurrentContext();
+
   const config = {
-    space: env.data?.SPACE_ID,
-    environment: env.data?.ENVIRONMENT_ID,
-    organization: env.data?.ORGANIZATION_ID,
+    space: context?.spaceId,
+    environment: context?.environmentId,
+    host: context?.host,
   };
 
   const configInfo = `Current Contentful Configuration:
-  - Space ID: ${config.space}
-  - Environment ID: ${config.environment}
-  - Organization ID: ${config.organization}`;
+  - Space ID: ${config.space ?? 'Not provided'}
+  - Environment ID: ${config.environment ?? 'Not provided'}
+  - API Host: ${config.host ?? 'api.contentful.com'}`;
 
   const todaysDate = new Date().toLocaleDateString('en-US');
 
@@ -34,7 +36,7 @@ async function tool(_params: Params) {
 
     <context>
       ${configInfo}
-    </content>
+    </context>
 
     <todaysDate>${todaysDate}</todaysDate>
   `;

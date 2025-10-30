@@ -1,3 +1,22 @@
+## 2.0.0 (2025-10-30)
+
+### 🚀 Features
+
+- introduce `createMcpServer` factory for per-session, multi-tenant usage
+- add `nodeWebSocketAdapter` and `nodeStreamsAdapter` for WebSocket/serverless and stdio transports
+- expose `onStop` hook, examples, and redacting logger utilities for safer embedding
+
+### 🛠 Internal
+
+- emit dual ESM/CJS builds with generated type declarations
+- refactor Contentful client helpers to require explicit runtime context
+- reset tool state between sessions to avoid cross-tenant leakage
+
+### ⚠️ Breaking Changes
+
+- programmatic API renamed from `createContentfulMcpServer` to `createMcpServer`
+- library no longer reads credentials from process environment; callers must pass them explicitly
+
 ## 1.6.2 (2025-10-17)
 
 ### 🩹 Fixes
