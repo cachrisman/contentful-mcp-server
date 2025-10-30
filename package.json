@@ -59,7 +59,8 @@
     "inspect:watch": "node ./scripts/inspect-watch.js",
     "logs:watch": "npx mcps-logger",
     "update-licenses": "node scripts/update-licenses.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "npm-install": "echo 'Skipping nested npm install; dependencies are managed by the consumer project.'"
   },
   "dependencies": {
     "@contentful/rich-text-types": "^17.2.4",
