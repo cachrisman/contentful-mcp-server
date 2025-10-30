@@ -59,7 +59,7 @@
     "inspect:watch": "node ./scripts/inspect-watch.js",
     "logs:watch": "npx mcps-logger",
     "update-licenses": "node scripts/update-licenses.js",
-    "prepare": "if [ -n \"$IN_PNPM_INSTALL\" ]; then echo 'Skipping husky for pnpm install'; else husky; fi",
+    "prepare": "if [ -d .git ]; then husky; else echo 'Skipping husky in pnpm store'; fi",
     "npm-install": "echo 'Skipping nested npm install; dependencies are managed by the consumer project.'"
   },
   "dependencies": {
