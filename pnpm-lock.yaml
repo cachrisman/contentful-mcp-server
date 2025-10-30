@@ -7,6 +7,9 @@ settings:
 importers:
   .:
     dependencies:
+      '@anthropic-ai/mcpb':
+        specifier: ^1.1.3
+        version: 1.1.3
       '@contentful/rich-text-types':
         specifier: ^17.2.4
         version: 17.2.4(babel-plugin-macros@3.1.0)
@@ -41,9 +44,6 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
     devDependencies:
-      '@anthropic-ai/dxt':
-        specifier: ^0.2.6
-        version: 0.2.6
       '@commitlint/cli':
         specifier: ^20.1.0
         version: 20.1.0(@types/node@24.9.2)(typescript@5.9.3)
@@ -103,12 +103,11 @@ importers:
         version: 4.0.5(@types/node@24.9.2)(jiti@2.6.1)(yaml@2.8.1)
 
 packages:
-  '@anthropic-ai/dxt@0.2.6':
+  '@anthropic-ai/mcpb@1.1.3':
     resolution:
       {
-        integrity: sha512-5VSqKRpkytTYh5UJz9jOaI8zLXNCe4Gc+ArKGFV6IeWnEPP0Qnd0k+V3pO8cYzp92Puf/+Cgo0xc4haE0azTXg==,
+        integrity: sha512-bi9MRLPfgp82KBz1lQfShroqujYTkOWwfuIlnp3PLn5Mk68Xo92kWnEM3jfDstoiMhDhzdHAqii9ZbGQ/UpAVg==,
       }
-    deprecated: This package has been renamed to @anthropic-ai/mcpb
     hasBin: true
 
   '@babel/code-frame@7.27.1':
@@ -8053,7 +8052,7 @@ packages:
       }
 
 snapshots:
-  '@anthropic-ai/dxt@0.2.6':
+  '@anthropic-ai/mcpb@1.1.3':
     dependencies:
       '@inquirer/prompts': 6.0.1
       commander: 13.1.0
@@ -8063,6 +8062,7 @@ snapshots:
       node-forge: 1.3.1
       pretty-bytes: 5.6.0
       zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
 

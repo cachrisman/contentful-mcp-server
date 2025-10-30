@@ -59,10 +59,11 @@
     "inspect:watch": "node ./scripts/inspect-watch.js",
     "logs:watch": "npx mcps-logger",
     "update-licenses": "node scripts/update-licenses.js",
-    "prepare": "husky",
+    "prepare": "if [ -n \"$IN_PNPM_INSTALL\" ]; then echo 'Skipping husky for pnpm install'; else husky; fi",
     "npm-install": "echo 'Skipping nested npm install; dependencies are managed by the consumer project.'"
   },
   "dependencies": {
+    "@anthropic-ai/mcpb": "^1.1.3",
     "@contentful/rich-text-types": "^17.2.4",
     "@modelcontextprotocol/sdk": "^1.20.2",
     "contentful-export": "^7.21.96",
@@ -76,7 +77,6 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@anthropic-ai/dxt": "^0.2.6",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@modelcontextprotocol/inspector": "0.17.2",
