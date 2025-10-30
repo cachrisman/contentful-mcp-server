@@ -22,12 +22,12 @@ export const PublishEntryToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof PublishEntryToolParams>;
 
 async function tool(args: Params) {
+  const context = await createToolClient(args);
+  const { client, spaceId, environmentId } = context;
   const baseParams: BulkOperationParams = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
   };
-
-  const contentfulClient = createToolClient(args);
 
   // Normalize input to always be an array
   const entryIds = Array.isArray(args.entryId) ? args.entryId : [args.entryId];
@@ -41,10 +41,10 @@ async function tool(args: Params) {
     };
 
     // Get the entry first
-    const entry = await contentfulClient.entry.get(params);
+    const entry = await client.entry.get(params);
 
     // Publish the entry
-    const publishedEntry = await contentfulClient.entry.publish(params, entry);
+    const publishedEntry = await client.entry.publish(params, entry);
 
     return createSuccessResponse('Entry published successfully', {
       status: publishedEntry.sys.status,
@@ -54,23 +54,19 @@ async function tool(args: Params) {
 
   // For multiple entries, use bulk action API
   // Get the current version of each entry
-  const entityVersions = await createEntryVersionedLinks(
-    contentfulClient,
-    baseParams,
-    entryIds,
-  );
+  const entityVersions = await createEntryVersionedLinks(context, baseParams, entryIds);
 
   // Create the collection object
   const entitiesCollection = createEntitiesCollection(entityVersions);
 
   // Create the bulk action
-  const bulkAction = await contentfulClient.bulkAction.publish(baseParams, {
+  const bulkAction = await client.bulkAction.publish(baseParams, {
     entities: entitiesCollection,
   });
 
   // Wait for the bulk action to complete
   const action = await waitForBulkActionCompletion(
-    contentfulClient,
+    context,
     baseParams,
     bulkAction.sys.id,
   );

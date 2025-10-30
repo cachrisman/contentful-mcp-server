@@ -12,19 +12,18 @@ export const DeleteLocaleToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof DeleteLocaleToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     localeId: args.localeId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // First, get the locale to check its current state
-  const locale = await contentfulClient.locale.get(params);
+  const locale = await client.locale.get(params);
 
   // Delete the locale
-  await contentfulClient.locale.delete(params);
+  await client.locale.delete(params);
 
   // Return info about the locale that was deleted
   return createSuccessResponse('Locale deleted successfully', { locale });

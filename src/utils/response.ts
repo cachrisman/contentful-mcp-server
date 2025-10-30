@@ -4,6 +4,7 @@ import type {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { formatResponse } from './formatters.js';
+import { ensureToolError } from './errors.js';
 import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
 
 /**
@@ -56,14 +57,13 @@ export function withErrorHandling<T extends Record<string, unknown>>(
     try {
       return await handler(params, extra);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const toolError = ensureToolError(error);
       return {
         isError: true,
         content: [
           {
             type: 'text',
-            text: `${errorPrefix}: ${errorMessage}`,
+            text: `${errorPrefix}: ${toolError.message}`,
           },
         ],
       };

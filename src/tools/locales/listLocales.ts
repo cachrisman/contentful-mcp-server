@@ -23,15 +23,11 @@ export const ListLocaleToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof ListLocaleToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
-  };
+  const { client, spaceId, environmentId } = await createToolClient(args);
 
-  const contentfulClient = createToolClient(args);
-
-  const locales = await contentfulClient.locale.getMany({
-    ...params,
+  const locales = await client.locale.getMany({
+    spaceId,
+    environmentId,
     query: {
       limit: args.limit || 100,
       skip: args.skip || 0,

@@ -30,17 +30,16 @@ export const UpdateAssetToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UpdateAssetToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     assetId: args.assetId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // Get existing asset, merge fields, and update
-  const existingAsset = await contentfulClient.asset.get(params);
-  const updatedAsset = await contentfulClient.asset.update(params, {
+  const existingAsset = await client.asset.get(params);
+  const updatedAsset = await client.asset.update(params, {
     ...existingAsset,
     fields: { ...existingAsset.fields, ...args.fields },
     metadata: {

@@ -51,17 +51,16 @@ export const UpdateAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UpdateAiActionToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     aiActionId: args.aiActionId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // Get existing AI action, merge fields, and update
-  const existingAiAction = await contentfulClient.aiAction.get(params);
-  const updatedAiAction = await contentfulClient.aiAction.update(params, {
+  const existingAiAction = await client.aiAction.get(params);
+  const updatedAiAction = await client.aiAction.update(params, {
     ...existingAiAction,
     ...(args.name && { name: args.name }),
     ...(args.description && { description: args.description }),

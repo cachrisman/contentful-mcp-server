@@ -33,15 +33,11 @@ export const SearchEntriesToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof SearchEntriesToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
-  };
+  const { client, spaceId, environmentId } = await createToolClient(args);
 
-  const contentfulClient = createToolClient(args);
-
-  const entries = await contentfulClient.entry.getMany({
-    ...params,
+  const entries = await client.entry.getMany({
+    spaceId,
+    environmentId,
     query: {
       ...args.query,
       limit: Math.min(args.query.limit || 3, 3),
@@ -62,5 +58,5 @@ async function tool(args: Params) {
 
 export const searchEntriesTool = withErrorHandling(
   tool,
-  'Error deleting dataset',
+  'Error searching entries',
 );

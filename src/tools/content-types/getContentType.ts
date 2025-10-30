@@ -14,16 +14,12 @@ export const GetContentTypeToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof GetContentTypeToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
-  };
-
-  const contentfulClient = createToolClient(args);
+  const { client, spaceId, environmentId } = await createToolClient(args);
 
   // Get the content type details
-  const contentType = await contentfulClient.contentType.get({
-    ...params,
+  const contentType = await client.contentType.get({
+    spaceId,
+    environmentId,
     contentTypeId: args.contentTypeId,
   });
 

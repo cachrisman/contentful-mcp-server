@@ -21,15 +21,11 @@ export const CreateEntryToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof CreateEntryToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
-  };
-
-  const contentfulClient = createToolClient(args);
-  const newEntry = await contentfulClient.entry.create(
+  const { client, spaceId, environmentId } = await createToolClient(args);
+  const newEntry = await client.entry.create(
     {
-      ...params,
+      spaceId,
+      environmentId,
       contentTypeId: args.contentTypeId,
     },
     {

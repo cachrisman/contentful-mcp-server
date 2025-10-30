@@ -12,17 +12,16 @@ export const UnpublishAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UnpublishAiActionToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     aiActionId: args.aiActionId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   try {
     // Unpublish the AI action
-    await contentfulClient.aiAction.unpublish(params);
+    await client.aiAction.unpublish(params);
 
     return createSuccessResponse('AI action unpublished successfully', {
       aiActionId: args.aiActionId,

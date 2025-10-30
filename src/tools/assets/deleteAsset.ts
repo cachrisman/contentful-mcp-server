@@ -12,19 +12,18 @@ export const DeleteAssetToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof DeleteAssetToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     assetId: args.assetId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // First, get the asset to store info for return
-  const asset = await contentfulClient.asset.get(params);
+  const asset = await client.asset.get(params);
 
   // Delete the asset
-  await contentfulClient.asset.delete(params);
+  await client.asset.delete(params);
 
   return createSuccessResponse('Asset deleted successfully', { asset });
 }

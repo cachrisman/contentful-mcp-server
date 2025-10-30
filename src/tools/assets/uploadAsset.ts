@@ -39,12 +39,11 @@ export const UploadAssetToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UploadAssetToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
   };
-
-  const contentfulClient = createToolClient(args);
 
   // Prepare asset properties following Contentful's structure
   const locale = args.locale || 'en-US';
@@ -60,10 +59,10 @@ async function tool(args: Params) {
   };
 
   // Create the asset
-  const asset = await contentfulClient.asset.create(params, assetProps);
+  const asset = await client.asset.create(params, assetProps);
 
   // Process the asset for all locales
-  const processedAsset = await contentfulClient.asset.processForAllLocales(
+  const processedAsset = await client.asset.processForAllLocales(
     params,
     {
       sys: asset.sys,

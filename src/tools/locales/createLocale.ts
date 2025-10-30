@@ -43,15 +43,14 @@ export const CreateLocaleToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof CreateLocaleToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // Create the locale
-  const newLocale = await contentfulClient.locale.create(params, {
+  const newLocale = await client.locale.create(params, {
     name: args.name,
     code: args.code,
     fallbackCode: args.fallbackCode,

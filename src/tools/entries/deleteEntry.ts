@@ -12,19 +12,18 @@ export const DeleteEntryToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof DeleteEntryToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     entryId: args.entryId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // First, get the entry to check its status
-  const entry = await contentfulClient.entry.get(params);
+  const entry = await client.entry.get(params);
 
   // Delete the entry
-  await contentfulClient.entry.delete(params);
+  await client.entry.delete(params);
 
   //return info about the entry that was deleted
   return createSuccessResponse('Entry deleted successfully', { entry });

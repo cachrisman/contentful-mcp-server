@@ -12,16 +12,12 @@ export const GetEntryToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof GetEntryToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+  const { client, spaceId, environmentId } = await createToolClient(args);
+  const entry = await client.entry.get({
+    spaceId,
+    environmentId,
     entryId: args.entryId,
-  };
-
-  const contentfulClient = createToolClient(args);
-
-  // Get the entry
-  const entry = await contentfulClient.entry.get(params);
+  });
 
   return createSuccessResponse('Entry retrieved successfully', { entry });
 }

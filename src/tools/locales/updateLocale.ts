@@ -39,16 +39,15 @@ export const UpdateLocaleToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UpdateLocaleToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     localeId: args.localeId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // First, get the existing locale
-  const existingLocale = await contentfulClient.locale.get(params);
+  const existingLocale = await client.locale.get(params);
 
   // Remove read-only fields (nternal_code cannot be updated)
   delete (existingLocale as { internal_code?: string }).internal_code;
@@ -57,10 +56,7 @@ async function tool(args: Params) {
   const updateData = { ...existingLocale, ...args.fields };
 
   // Update the locale with merged data
-  const updatedLocale = await contentfulClient.locale.update(
-    params,
-    updateData,
-  );
+  const updatedLocale = await client.locale.update(params, updateData);
 
   return createSuccessResponse('Locale updated successfully', {
     updatedLocale,

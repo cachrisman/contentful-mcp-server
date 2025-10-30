@@ -45,17 +45,13 @@ export const CreateAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof CreateAiActionToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId || 'master',
+    spaceId,
+    environmentId,
   };
 
-  const contentfulClient = createToolClient({
-    ...args,
-    environmentId: args.environmentId || 'master',
-  });
-
-  const aiAction = await contentfulClient.aiAction.create(params, {
+  const aiAction = await client.aiAction.create(params, {
     name: args.name,
     description: args.description,
     instruction: args.instruction,

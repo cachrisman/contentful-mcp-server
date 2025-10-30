@@ -12,20 +12,19 @@ export const PublishAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof PublishAiActionToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     aiActionId: args.aiActionId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   try {
     // Get the AI action first
-    const aiAction = await contentfulClient.aiAction.get(params);
+    const aiAction = await client.aiAction.get(params);
 
     // Publish the AI action with the version parameter
-    const publishedAiAction = await contentfulClient.aiAction.publish(
+    const publishedAiAction = await client.aiAction.publish(
       {
         ...params,
         version: aiAction.sys.version,

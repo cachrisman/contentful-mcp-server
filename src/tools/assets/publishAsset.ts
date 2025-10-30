@@ -22,12 +22,12 @@ export const PublishAssetToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof PublishAssetToolParams>;
 
 async function tool(args: Params) {
+  const context = await createToolClient(args);
+  const { client, spaceId, environmentId } = context;
   const baseParams: BulkOperationParams = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
   };
-
-  const contentfulClient = createToolClient(args);
 
   // Normalize input to always be an array
   const assetIds = Array.isArray(args.assetId) ? args.assetId : [args.assetId];
@@ -42,10 +42,10 @@ async function tool(args: Params) {
       };
 
       // Get the asset first
-      const asset = await contentfulClient.asset.get(params);
+      const asset = await client.asset.get(params);
 
       // Publish the asset
-      const publishedAsset = await contentfulClient.asset.publish(
+      const publishedAsset = await client.asset.publish(
         params,
         asset,
       );
@@ -64,23 +64,19 @@ async function tool(args: Params) {
 
   // For multiple assets, use bulk action API
   // Get the current version of each asset
-  const entityVersions = await createAssetVersionedLinks(
-    contentfulClient,
-    baseParams,
-    assetIds,
-  );
+  const entityVersions = await createAssetVersionedLinks(context, baseParams, assetIds);
 
   // Create the collection object
   const entitiesCollection = createEntitiesCollection(entityVersions);
 
   // Create the bulk action
-  const bulkAction = await contentfulClient.bulkAction.publish(baseParams, {
+  const bulkAction = await client.bulkAction.publish(baseParams, {
     entities: entitiesCollection,
   });
 
   // Wait for the bulk action to complete
   const action = await waitForBulkActionCompletion(
-    contentfulClient,
+    context,
     baseParams,
     bulkAction.sys.id,
   );

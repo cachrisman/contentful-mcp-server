@@ -19,16 +19,16 @@ export const UpdateEntryToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UpdateEntryToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
+
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     entryId: args.entryId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // First, get the existing entry
-  const existingEntry = await contentfulClient.entry.get(params);
+  const existingEntry = await client.entry.get(params);
 
   // Merge the provided fields with existing fields
   const mergedFields = {
@@ -47,7 +47,7 @@ async function tool(args: Params) {
   ];
 
   // Update the entry with merged fields
-  const updatedEntry = await contentfulClient.entry.update(params, {
+  const updatedEntry = await client.entry.update(params, {
     ...existingEntry,
     fields: mergedFields,
     metadata: {

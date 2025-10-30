@@ -12,16 +12,14 @@ export const GetAssetToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof GetAssetToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
-    assetId: args.assetId,
-  };
-
-  const contentfulClient = createToolClient(args);
+  const { client, spaceId, environmentId } = await createToolClient(args);
 
   // Get the asset
-  const asset = await contentfulClient.asset.get(params);
+  const asset = await client.asset.get({
+    spaceId,
+    environmentId,
+    assetId: args.assetId,
+  });
 
   return createSuccessResponse('Asset retrieved successfully', { asset });
 }

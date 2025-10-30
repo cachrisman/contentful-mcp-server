@@ -12,19 +12,18 @@ export const DeleteAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof DeleteAiActionToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     aiActionId: args.aiActionId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // First, get the AI action to store info for return
-  const aiAction = await contentfulClient.aiAction.get(params);
+  const aiAction = await client.aiAction.get(params);
 
   // Delete the AI action
-  await contentfulClient.aiAction.delete(params);
+  await client.aiAction.delete(params);
 
   return createSuccessResponse('AI action deleted successfully', { aiAction });
 }

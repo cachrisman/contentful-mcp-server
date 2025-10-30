@@ -22,12 +22,12 @@ export const UnpublishEntryToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof UnpublishEntryToolParams>;
 
 async function tool(args: Params) {
+  const context = await createToolClient(args);
+  const { client, spaceId, environmentId } = context;
   const baseParams: BulkOperationParams = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
   };
-
-  const contentfulClient = createToolClient(args);
 
   // Normalize input to always be an array
   const entryIds = Array.isArray(args.entryId) ? args.entryId : [args.entryId];
@@ -41,13 +41,10 @@ async function tool(args: Params) {
     };
 
     // Get the entry first
-    const entry = await contentfulClient.entry.get(params);
+    const entry = await client.entry.get(params);
 
     // Unpublish the entry
-    const unpublishedEntry = await contentfulClient.entry.unpublish(
-      params,
-      entry,
-    );
+    const unpublishedEntry = await client.entry.unpublish(params, entry);
 
     return createSuccessResponse('Entry unpublished successfully', {
       status: unpublishedEntry.sys.status,
@@ -57,23 +54,19 @@ async function tool(args: Params) {
 
   // For multiple entries, use bulk action API
   // Get the unversioned links for each entry (unpublish doesn't need version info)
-  const entityLinks = await createEntryUnversionedLinks(
-    contentfulClient,
-    baseParams,
-    entryIds,
-  );
+  const entityLinks = await createEntryUnversionedLinks(context, baseParams, entryIds);
 
   // Create the collection object
   const entitiesCollection = createEntitiesCollection(entityLinks);
 
   // Create the bulk action
-  const bulkAction = await contentfulClient.bulkAction.unpublish(baseParams, {
+  const bulkAction = await client.bulkAction.unpublish(baseParams, {
     entities: entitiesCollection,
   });
 
   // Wait for the bulk action to complete
   const action = await waitForBulkActionCompletion(
-    contentfulClient,
+    context,
     baseParams,
     bulkAction.sys.id,
   );

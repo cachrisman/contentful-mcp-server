@@ -12,16 +12,15 @@ export const GetLocaleToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof GetLocaleToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     localeId: args.localeId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // Get the locale
-  const locale = await contentfulClient.locale.get(params);
+  const locale = await client.locale.get(params);
 
   return createSuccessResponse('Locale retrieved successfully', { locale });
 }

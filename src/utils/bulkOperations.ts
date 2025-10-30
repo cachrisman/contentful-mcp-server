@@ -1,5 +1,6 @@
 // Common types and utilities for Contentful bulk operations
-import type { PlainClientAPI } from 'contentful-management';
+import type { ContentfulContext } from '../lib/contentful.js';
+import { executeContentfulOperation } from '../lib/contentful.js';
 
 export interface VersionedLink {
   sys: {
@@ -53,24 +54,42 @@ export interface BulkOperationParams {
 
 // Helper function to wait for bulk action completion
 export async function waitForBulkActionCompletion(
-  contentfulClient: PlainClientAPI,
+  context: ContentfulContext,
   baseParams: BulkOperationParams,
   bulkActionId: string,
 ): Promise<BulkActionResponse> {
-  let action = (await contentfulClient.bulkAction.get({
-    ...baseParams,
-    bulkActionId,
-  })) as unknown as BulkActionResponse;
+  let action = (await executeContentfulOperation(
+    context,
+    () =>
+      context.client.bulkAction.get({
+        ...baseParams,
+        bulkActionId,
+      }),
+    {
+      action: 'check bulk action status',
+      resource: 'bulkAction',
+      id: bulkActionId,
+    },
+  )) as unknown as BulkActionResponse;
 
   while (
     action.sys.status === 'inProgress' ||
     action.sys.status === 'created'
   ) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    action = (await contentfulClient.bulkAction.get({
-      ...baseParams,
-      bulkActionId,
-    })) as unknown as BulkActionResponse;
+    await sleep(1000);
+    action = (await executeContentfulOperation(
+      context,
+      () =>
+        context.client.bulkAction.get({
+          ...baseParams,
+          bulkActionId,
+        }),
+      {
+        action: 'check bulk action status',
+        resource: 'bulkAction',
+        id: bulkActionId,
+      },
+    )) as unknown as BulkActionResponse;
   }
 
   return action;
@@ -78,16 +97,25 @@ export async function waitForBulkActionCompletion(
 
 // Helper function to create versioned links for entries
 export async function createEntryVersionedLinks(
-  contentfulClient: PlainClientAPI,
+  context: ContentfulContext,
   baseParams: BulkOperationParams,
   entryIds: string[],
 ): Promise<VersionedLink[]> {
   return Promise.all(
     entryIds.map(async (entryId) => {
-      const currentEntry = await contentfulClient.entry.get({
-        ...baseParams,
-        entryId,
-      });
+      const currentEntry = await executeContentfulOperation(
+        context,
+        () =>
+          context.client.entry.get({
+            ...baseParams,
+            entryId,
+          }),
+        {
+          action: 'fetch entry for bulk publish',
+          resource: 'entry',
+          id: entryId,
+        },
+      );
 
       return {
         sys: {
@@ -103,7 +131,7 @@ export async function createEntryVersionedLinks(
 
 // Helper function to create unversioned links for entries (used for unpublish operations)
 export async function createEntryUnversionedLinks(
-  contentfulClient: PlainClientAPI,
+  context: ContentfulContext,
   baseParams: BulkOperationParams,
   entryIds: string[],
 ): Promise<UnversionedLink[]> {
@@ -111,10 +139,19 @@ export async function createEntryUnversionedLinks(
   // But we should validate they exist first
   await Promise.all(
     entryIds.map(async (entryId) => {
-      await contentfulClient.entry.get({
-        ...baseParams,
-        entryId,
-      });
+      await executeContentfulOperation(
+        context,
+        () =>
+          context.client.entry.get({
+            ...baseParams,
+            entryId,
+          }),
+        {
+          action: 'validate entry for bulk unpublish',
+          resource: 'entry',
+          id: entryId,
+        },
+      );
     }),
   );
 
@@ -129,16 +166,25 @@ export async function createEntryUnversionedLinks(
 
 // Helper function to create versioned links for assets
 export async function createAssetVersionedLinks(
-  contentfulClient: PlainClientAPI,
+  context: ContentfulContext,
   baseParams: BulkOperationParams,
   assetIds: string[],
 ): Promise<VersionedLink[]> {
   return Promise.all(
     assetIds.map(async (assetId) => {
-      const currentAsset = await contentfulClient.asset.get({
-        ...baseParams,
-        assetId,
-      });
+      const currentAsset = await executeContentfulOperation(
+        context,
+        () =>
+          context.client.asset.get({
+            ...baseParams,
+            assetId,
+          }),
+        {
+          action: 'fetch asset for bulk publish',
+          resource: 'asset',
+          id: assetId,
+        },
+      );
 
       return {
         sys: {
@@ -154,7 +200,7 @@ export async function createAssetVersionedLinks(
 
 // Helper function to create unversioned links for assets (used for unpublish operations)
 export async function createAssetUnversionedLinks(
-  contentfulClient: PlainClientAPI,
+  context: ContentfulContext,
   baseParams: BulkOperationParams,
   assetIds: string[],
 ): Promise<UnversionedLink[]> {
@@ -162,10 +208,19 @@ export async function createAssetUnversionedLinks(
   // But we should validate they exist first
   await Promise.all(
     assetIds.map(async (assetId) => {
-      await contentfulClient.asset.get({
-        ...baseParams,
-        assetId,
-      });
+      await executeContentfulOperation(
+        context,
+        () =>
+          context.client.asset.get({
+            ...baseParams,
+            assetId,
+          }),
+        {
+          action: 'validate asset for bulk unpublish',
+          resource: 'asset',
+          id: assetId,
+        },
+      );
     }),
   );
 
@@ -194,4 +249,8 @@ export function createEntitiesCollection(
     },
     items: entities,
   };
+}
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

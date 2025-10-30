@@ -12,16 +12,15 @@ export const GetAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof GetAiActionToolParams>;
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
     aiActionId: args.aiActionId,
   };
 
-  const contentfulClient = createToolClient(args);
-
   // Get the AI action
-  const aiAction = await contentfulClient.aiAction.get(params);
+  const aiAction = await client.aiAction.get(params);
 
   return createSuccessResponse('AI action retrieved successfully', {
     aiAction,

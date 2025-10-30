@@ -1,3 +1,4 @@
+import type { PlainClientAPI } from 'contentful-management';
 import { z } from 'zod';
 import {
   createSuccessResponse,
@@ -28,7 +29,7 @@ export const InvokeAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof InvokeAiActionToolParams>;
 
 async function pollForCompletion(
-  contentfulClient: ReturnType<typeof createToolClient>,
+  client: PlainClientAPI,
   params: { spaceId: string; environmentId: string; aiActionId: string },
   aiActions: Array<{ sys: { id: string } }>,
   pollInterval: number = 30000,
@@ -48,11 +49,10 @@ async function pollForCompletion(
         .filter((action) => !completedActions.has(action.sys.id)) //filter out actions that have already been completed
         .map(async (action) => {
           try {
-            const invocationStatus =
-              await contentfulClient.aiActionInvocation.get({
-                ...params,
-                invocationId: action.sys.id,
-              });
+            const invocationStatus = await client.aiActionInvocation.get({
+              ...params,
+              invocationId: action.sys.id,
+            });
 
             const status = (invocationStatus as InvocationStatusResponse).sys
               .status;
@@ -90,16 +90,16 @@ async function pollForCompletion(
 }
 
 async function tool(args: Params) {
+  const { client, spaceId, environmentId } = await createToolClient(args);
   const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
+    spaceId,
+    environmentId,
   };
 
-  const contentfulClient = createToolClient(args);
   const aiActions = [];
 
   for (const field of args.fields) {
-    const aiAction = await contentfulClient.aiAction.invoke(
+    const aiAction = await client.aiAction.invoke(
       {
         ...params,
         aiActionId: args.aiActionId,
@@ -115,7 +115,7 @@ async function tool(args: Params) {
 
   // Poll for completion
   const completedActions = await pollForCompletion(
-    contentfulClient,
+    client,
     { ...params, aiActionId: args.aiActionId },
     aiActions,
   );

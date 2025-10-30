@@ -29,15 +29,11 @@ export const ListAiActionToolParams = BaseToolSchema.extend({
 type Params = z.infer<typeof ListAiActionToolParams>;
 
 async function tool(args: Params) {
-  const params = {
-    spaceId: args.spaceId,
-    environmentId: args.environmentId,
-  };
+  const { client, spaceId, environmentId } = await createToolClient(args);
 
-  const contentfulClient = createToolClient(args);
-
-  const aiActions = await contentfulClient.aiAction.getMany({
-    ...params,
+  const aiActions = await client.aiAction.getMany({
+    spaceId,
+    environmentId,
     query: {
       limit: Math.min(args.limit || 3, 3),
       skip: args.skip || 0,
