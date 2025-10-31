@@ -11,8 +11,10 @@ import { registerLocaleTools } from './locales/register.js';
 import { registerJobs } from './jobs/register.js';
 import { registerOrgTools } from './orgs/register.js';
 import { registerTaxonomyTools } from './taxonomies/register.js';
+import { registerHealthTools } from './health/register.js';
 
 export function registerAllTools(server: McpServer) {
+  registerHealthTools(server);
   registerContextTools(server);
   registerEntriesTools(server);
   registerContentTypesTools(server);

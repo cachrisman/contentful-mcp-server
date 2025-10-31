@@ -1,0 +1,17 @@
+node_modules
+.git
+.env
+.env.*
+!.env.example
+*.log
+coverage
+.DS_Store
+.idea
+.vscode
+*.test.ts
+*.test.js
+vitest.config.ts
+.github
+scripts/inspect.js
+scripts/inspect-watch.js
+build/
