@@ -1,0 +1,8 @@
+{
+  "buildCommand": "pnpm build",
+  "functions": {
+    "api/mcp.ts": {
+      "maxDuration": 60
+    }
+  }
+}

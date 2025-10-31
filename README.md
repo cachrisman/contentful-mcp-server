@@ -12,6 +12,12 @@ This MCP server provides a comprehensive set of tools for content management, al
 - **Workflow Automation**: "Create an AI action that translates content to Spanish"
 - **Content Modeling**: "Add a new field to the product content type for customer ratings"
 
+## 🌐 Multi-Tenant Support
+
+**NEW**: The MCP server now supports **multi-tenant, stateless operation** suitable for serverless deployments like Vercel. In this mode, each tool invocation accepts tenant-specific Contentful credentials, enabling a single deployment to serve multiple tenants securely.
+
+See [Multi-Tenant Usage](#-multi-tenant-usage) and [Deployment Guide](DEPLOYMENT.md) for details.
+
 ## 📓 Table of Contents
 
 - [⚙️ Getting Started](#-getting-started)
@@ -22,6 +28,11 @@ This MCP server provides a comprehensive set of tools for content management, al
 - [🧩 Programmatic Usage](#-programmatic-usage)
   - [Node.js WebSocket or Serverless](#nodejs-websocket-or-serverless)
   - [Local stdio Development](#local-stdio-development)
+- [🌐 Multi-Tenant Usage](#-multi-tenant-usage)
+  - [Tenant Credentials](#tenant-credentials)
+  - [Example Requests](#example-requests)
+  - [Security Considerations](#security-considerations)
+- [☁️ Deployment](#️-deployment)
 - [🛠️ Available Tools](#️-available-tools)
 - [🔍 Development](#-development)
   - [Testing with MCP Inspector](#testing-with-mcp-inspector)
@@ -151,10 +162,130 @@ async function main() {
 
 The default logger automatically redacts sensitive values such as the CMA token. See [`examples/stdio.ts`](./examples/stdio.ts) for an end-to-end runnable sample.
 
+## 🌐 Multi-Tenant Usage
+
+The MCP server supports **multi-tenant mode** where each tool invocation carries its own Contentful credentials. This enables:
+
+- ✅ **Stateless operation** suitable for serverless/edge deployments
+- ✅ **Multiple tenants** using a single server instance
+- ✅ **No global configuration** - credentials passed per request
+- ✅ **Secure isolation** between different Contentful spaces
+
+### Tenant Credentials
+
+Every tool invocation must include a `tenant` object with these fields:
+
+```typescript
+{
+  "tenant": {
+    "CONTENTFUL_MANAGEMENT_ACCESS_TOKEN": "string",  // Required: Your CMA token
+    "SPACE_ID": "string",                            // Required: Your space ID
+    "ENVIRONMENT_ID": "string",                      // Optional: defaults to "master"
+    "CONTENTFUL_HOST": "string"                      // Optional: defaults to "api.contentful.com"
+  }
+}
+```
+
+### Example Requests
+
+#### Using HTTP/JSON-RPC (Vercel deployment)
+
+```bash
+curl -X POST "https://your-server.vercel.app/mcp" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "tools/get_entry",
+    "params": {
+      "tenant": {
+        "CONTENTFUL_MANAGEMENT_ACCESS_TOKEN": "CFPAT-xxx",
+        "SPACE_ID": "your-space-id",
+        "ENVIRONMENT_ID": "master"
+      },
+      "entryId": "your-entry-id"
+    }
+  }'
+```
+
+#### Health Check
+
+```bash
+curl -X POST "https://your-server.vercel.app/mcp" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "health",
+    "method": "tools/ping",
+    "params": {
+      "tenant": {
+        "CONTENTFUL_MANAGEMENT_ACCESS_TOKEN": "CFPAT-xxx",
+        "SPACE_ID": "your-space-id"
+      }
+    }
+  }'
+```
+
+### Security Considerations
+
+- **No token persistence**: Credentials are never stored or cached across requests
+- **Automatic redaction**: Tokens are automatically redacted in logs (only last 4 chars shown)
+- **Per-request validation**: Every request validates credentials independently
+- **CORS protection**: Configure `ALLOWED_ORIGINS` environment variable
+- **Rate limiting**: Built-in retry logic with exponential backoff for 429/5xx errors
+
+### Error Handling
+
+The server provides actionable error messages:
+
+- **401 Unauthorized**: Invalid `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN`
+- **403 Forbidden**: Token lacks required permissions
+- **404 Not Found**: Resource doesn't exist in the specified space/environment
+- **429 Rate Limited**: Automatically retried with exponential backoff
+- **5xx Server Errors**: Automatically retried (transient Contentful API issues)
+
+## ☁️ Deployment
+
+### Deploy to Vercel
+
+The server is optimized for Vercel serverless deployment:
+
+1. **Quick Deploy**: Click the button to deploy to Vercel
+
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/contentful/contentful-mcp-server)
+
+2. **Manual Deploy**: See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions
+
+3. **Configure CORS**: Set `ALLOWED_ORIGINS` environment variable in Vercel:
+   ```
+   ALLOWED_ORIGINS=https://your-backend.com,https://app.contentful.com
+   ```
+
+### Local Development (Single Tenant)
+
+For local development with a single tenant, you can still use environment variables:
+
+```bash
+# .env
+CONTENTFUL_MANAGEMENT_ACCESS_TOKEN=your-token
+SPACE_ID=your-space-id
+ENVIRONMENT_ID=master
+CONTENTFUL_HOST=api.contentful.com
+```
+
+Then run via stdio transport:
+
+```bash
+npm install
+npm run build
+npm start
+```
+
 ## 🛠️ Available Tools
 
 | Category                  | Tool Name                  | Description                                      |
 | ------------------------- | -------------------------- | ------------------------------------------------ |
+| **Health & Monitoring**   | `ping`                     | Health check and credential verification         |
 | **Context & Setup**       | `get_initial_context`      | Initialize connection and get usage instructions |
 | **Content Types**         | `list_content_types`       | List all content types                           |
 |                           | `get_content_type`         | Get detailed content type information            |
